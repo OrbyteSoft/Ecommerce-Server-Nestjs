@@ -15,6 +15,7 @@ import { CouponModule } from './modules/coupon/coupon.module';
 import { AddressModule } from './modules/address/address.module';
 import { PaymentModule } from './modules/payment/payment.module';
 import { ImageModule } from './modules/image/image.module';
+import { OtpModule } from './otp/otp.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { ImageModule } from './modules/image/image.module';
     AddressModule,
     PaymentModule,
     ImageModule,
+    OtpModule,
   ],
   controllers: [AppController],
   providers: [AppService],

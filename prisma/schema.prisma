@@ -96,6 +96,22 @@ model Category {
   @@map("categories")
 }
 
+model Brand {
+  id        String    @id @default(uuid())
+  name      String
+  slug      String    @unique
+  logoUrl   String?   @map("logo_url")
+  isActive  Boolean   @default(true) @map("is_active")
+
+  products  Product[]
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@index([slug])
+  @@map("brands")
+}
+
 
 model Product {
   id           String   @id @default(uuid())
@@ -106,7 +122,7 @@ model Product {
   compareAt    Float?   @map("compare_at")
   sku          String?  @unique
   stock        Int      @default(0)
-  
+
   imageUrl     String?  @map("image_url")
 
   isActive     Boolean  @default(true) @map("is_active")
@@ -114,11 +130,15 @@ model Product {
   isBestSeller Boolean  @default(false) @map("is_best_seller")
   isNewArrival Boolean  @default(false) @map("is_new_arrival")
   isFlashDeal  Boolean  @default(false) @map("is_flash_deal")
-  
+
   flashDealEnd DateTime? @map("flash_deal_end")
 
   categoryId String?   @map("category_id")
   category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+
+  brandId String? @map("brand_id")
+  brand   Brand?  @relation(fields: [brandId], references: [id], onDelete: SetNull)
 
   images      Image[]
   orderItems  OrderItem[]
@@ -131,6 +151,7 @@ model Product {
 
   @@index([slug])
   @@index([categoryId])
+  @@index([brandId]) 
   @@index([isFeatured])
   @@index([isBestSeller])
   @@index([isNewArrival])

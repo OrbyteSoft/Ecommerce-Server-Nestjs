@@ -39,6 +39,14 @@ export class CreateProductDto {
   @IsNotEmpty()
   description: string;
 
+  @ApiPropertyOptional({
+    example: 'uuid-brand-id',
+    description: 'Brand ID',
+  })
+  @IsOptional()
+  @IsUUID()
+  brandId?: string;
+
   @ApiProperty({
     example: 999.99,
     description: 'The current selling price of the product',

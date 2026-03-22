@@ -28,6 +28,11 @@ export class QueryProductDto {
   @IsString()
   categoryId?: string;
 
+  @ApiPropertyOptional({ example: 'uuid-brand-id' })
+  @IsOptional()
+  @IsString()
+  brandId?: string;
+
   @ApiPropertyOptional({ example: 'true' })
   @IsOptional()
   @IsBooleanString()

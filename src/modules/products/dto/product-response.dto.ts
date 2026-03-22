@@ -14,6 +14,17 @@ export class ProductResponseDto {
   @ApiProperty({ example: 'Detailed description here' })
   description: string;
 
+  @ApiPropertyOptional({ example: 'uuid-brand-id' })
+  brandId?: string;
+
+  @ApiPropertyOptional({
+    example: { name: 'Nike', slug: 'nike' },
+  })
+  brand?: {
+    name: string;
+    slug: string;
+  };
+
   @ApiProperty({ example: 999.99 })
   price: number;
 

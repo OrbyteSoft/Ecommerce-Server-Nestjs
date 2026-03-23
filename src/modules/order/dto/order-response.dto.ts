@@ -43,13 +43,13 @@ export class OrderSingleResponseDto {
   @ApiProperty({ example: 2400 })
   subtotal: number;
 
-  @ApiProperty({ example: 312 })
+  @ApiProperty({ example: 0 })
   tax: number;
 
   @ApiProperty({ example: 50 })
   shippingFee: number;
 
-  @ApiProperty({ example: 2762 })
+  @ApiProperty({ example: 2450 })
   total: number;
 
   @ApiProperty({ type: [OrderItemResponseDto] })

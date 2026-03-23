@@ -60,9 +60,9 @@ export class OrderService {
       subtotal += item.product.price * item.quantity;
     }
 
-    const tax = subtotal * 0.13;
+    const tax = 0;
     const shippingFee = subtotal > 1000 ? 0 : 50;
-    const total = subtotal + tax + shippingFee;
+    const total = subtotal + shippingFee;
 
     return await this.prisma.$transaction(async (tx) => {
       const order = await tx.order.create({
@@ -94,6 +94,7 @@ export class OrderService {
               method: dto.paymentMethod,
               amount: total,
               status: 'PENDING',
+              reference: dto.transactionId || null,
             },
           },
         },

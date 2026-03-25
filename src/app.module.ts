@@ -15,6 +15,7 @@ import { CouponModule } from './modules/coupon/coupon.module';
 import { AddressModule } from './modules/address/address.module';
 import { PaymentModule } from './modules/payment/payment.module';
 import { ImageModule } from './modules/image/image.module';
+import { OtpModule } from './otp/otp.module';
 import { BrandModule } from './modules/brand/brand.module';
 
 @Module({
@@ -36,6 +37,7 @@ import { BrandModule } from './modules/brand/brand.module';
     AddressModule,
     PaymentModule,
     ImageModule,
+    OtpModule,
     BrandModule,
   ],
   controllers: [AppController],

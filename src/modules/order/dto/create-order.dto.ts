@@ -33,4 +33,9 @@ export class CreateOrderDto {
   @IsString()
   @IsOptional()
   notes?: string;
+
+  @ApiPropertyOptional({ example: 'ESEWA123456XYZ' })
+  @IsString()
+  @IsOptional()
+  transactionId?: string;
 }

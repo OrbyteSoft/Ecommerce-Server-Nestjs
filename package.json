@@ -43,6 +43,7 @@
     "reflect-metadata": "^0.2.2",
     "resend": "^6.9.4",
     "rxjs": "^7.8.1",
+    "slugify": "^1.6.8",
     "stream-buffers": "^3.0.3"
   },
   "devDependencies": {

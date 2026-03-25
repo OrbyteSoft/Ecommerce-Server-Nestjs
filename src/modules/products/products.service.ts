@@ -24,12 +24,10 @@ export class ProductService {
 
   async clearProductCache(id?: string, slug?: string) {
     try {
-      // 1. Clear individual detail keys
       if (id) await this.cacheManager.del(`product_detail:id:${id}`);
       if (slug) await this.cacheManager.del(`product_detail:slug:${slug}`);
       await this.cacheManager.del('homepage_sections');
 
-      // 2. Clear all list queries
       const store = this.cacheManager as any;
 
       if (store.store && typeof store.store.keys === 'function') {
@@ -40,15 +38,14 @@ export class ProductService {
       } else if (typeof store.clear === 'function') {
         await store.clear();
       }
-
-      console.log('Cache invalidated successfully');
     } catch (error) {
       console.error('Cache clear error:', error);
     }
   }
 
   async create(dto: CreateProductDto): Promise<ProductSingleResponseDto> {
-    const { images, imageUrl, ...data } = dto;
+    const { images, imageUrl, brandId, ...data } = dto;
+
     let slug = dto.slug || this.generateSlug(data.name);
 
     const existing = await this.prisma.product.findUnique({ where: { slug } });
@@ -59,15 +56,15 @@ export class ProductService {
     const product = await this.prisma.product.create({
       data: {
         ...data,
+        brandId,
         slug,
-        // Set primary image to provided imageUrl or fallback to first item in images array
         imageUrl: imageUrl || (images && images.length > 0 ? images[0] : null),
         images:
           images && images.length > 0
             ? { create: images.map((url) => ({ url })) }
             : undefined,
       },
-      include: { images: true },
+      include: { images: true, category: true, brand: true },
     });
 
     await this.clearProductCache();
@@ -84,6 +81,7 @@ export class ProductService {
     const {
       search,
       categoryId,
+      brandId,
       isActive,
       isFeatured,
       isBestSeller,
@@ -107,24 +105,38 @@ export class ProductService {
           { name: { contains: search, mode: 'insensitive' } },
           { description: { contains: search, mode: 'insensitive' } },
           { sku: { contains: search, mode: 'insensitive' } },
+          {
+            brand: {
+              name: { contains: search, mode: 'insensitive' },
+            },
+          },
         ],
       });
     }
 
     if (categoryId) andFilters.push({ categoryId });
+    if (brandId) andFilters.push({ brandId });
+
     if (isActive !== undefined)
       andFilters.push({ isActive: isActive === 'true' });
+
     if (isFeatured !== undefined)
       andFilters.push({ isFeatured: isFeatured === 'true' });
+
     if (isBestSeller !== undefined)
       andFilters.push({ isBestSeller: isBestSeller === 'true' });
+
     if (isNewArrival !== undefined)
       andFilters.push({ isNewArrival: isNewArrival === 'true' });
+
     if (isFlashDeal !== undefined)
       andFilters.push({ isFlashDeal: isFlashDeal === 'true' });
 
     if (activeDealsOnly === 'true') {
-      andFilters.push({ isFlashDeal: true, flashDealEnd: { gte: new Date() } });
+      andFilters.push({
+        isFlashDeal: true,
+        flashDealEnd: { gte: new Date() },
+      });
     }
 
     andFilters.push({
@@ -135,6 +147,7 @@ export class ProductService {
     });
 
     const where = { AND: andFilters };
+
     const sortFieldMap: Record<string, string> = {
       featured: 'isFeatured',
       newest: 'createdAt',
@@ -151,7 +164,7 @@ export class ProductService {
         where,
         skip,
         take: Number(limit),
-        include: { images: true, category: true },
+        include: { images: true, category: true, brand: true },
         orderBy: { [finalSortBy]: finalSortOrder },
       }),
       this.prisma.product.count({ where }),
@@ -179,10 +192,11 @@ export class ProductService {
 
     const product = await this.prisma.product.findUnique({
       where: { id },
-      include: { images: true, category: true },
+      include: { images: true, category: true, brand: true },
     });
 
     if (!product) throw new NotFoundException('Product not found');
+
     const result = { data: product as any };
     await this.cacheManager.set(cacheKey, result, 3600000);
     return result;
@@ -191,14 +205,13 @@ export class ProductService {
   async findByCategory(categorySlug: string) {
     return this.prisma.product.findMany({
       where: {
-        category: {
-          slug: categorySlug,
-        },
+        category: { slug: categorySlug },
         isActive: true,
       },
       include: {
         images: true,
         category: true,
+        brand: true,
       },
     });
   }
@@ -211,10 +224,11 @@ export class ProductService {
 
     const product = await this.prisma.product.findUnique({
       where: { slug },
-      include: { images: true, category: true },
+      include: { images: true, category: true, brand: true },
     });
 
     if (!product) throw new NotFoundException('Product not found');
+
     const result = { data: product as any };
     await this.cacheManager.set(cacheKey, result, 3600000);
     return result;
@@ -224,21 +238,21 @@ export class ProductService {
     id: string,
     dto: UpdateProductDto,
   ): Promise<ProductSingleResponseDto> {
-    const { images, imageUrl, ...data } = dto;
+    const { images, imageUrl, brandId, ...data } = dto;
+
     const existing = await this.prisma.product.findUnique({ where: { id } });
     if (!existing) throw new NotFoundException('Product not found');
 
     const updateData: any = { ...data };
 
-    // Explicitly update primary image if provided
+    if (brandId !== undefined) updateData.brandId = brandId;
+
     if (imageUrl !== undefined) updateData.imageUrl = imageUrl;
 
     if (images) {
-      // Clear existing relational images and replace with new ones
       await this.prisma.image.deleteMany({ where: { productId: id } });
       updateData.images = { create: images.map((url) => ({ url })) };
 
-      // Auto-update primary image if it wasn't explicitly provided in the payload
       if (!imageUrl && images.length > 0) {
         updateData.imageUrl = images[0];
       }
@@ -247,7 +261,7 @@ export class ProductService {
     const updated = await this.prisma.product.update({
       where: { id },
       data: updateData,
-      include: { images: true },
+      include: { images: true, category: true, brand: true },
     });
 
     await this.clearProductCache(id, existing.slug);
@@ -264,7 +278,7 @@ export class ProductService {
     const updated = await this.prisma.product.update({
       where: { id },
       data: { stock: dto.stock },
-      include: { images: true },
+      include: { images: true, category: true, brand: true },
     });
 
     await this.clearProductCache(id, product.slug);
@@ -280,6 +294,7 @@ export class ProductService {
     if (!product) throw new NotFoundException('Product not found');
 
     let message = 'Product permanently deleted';
+
     try {
       if (product._count.orderItems > 0) throw { code: 'P2003' };
       await this.prisma.product.delete({ where: { id } });

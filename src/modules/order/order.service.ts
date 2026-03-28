@@ -60,9 +60,16 @@ export class OrderService {
       subtotal += item.product.price * item.quantity;
     }
 
-    const tax = 0;
+    // Use values from DTO if provided, otherwise calculate
+    const discount = dto.discount || 0;
     const shippingFee = subtotal > 1000 ? 0 : 50;
-    const total = subtotal + shippingFee;
+    const tax = 0; // No VAT/Tax
+
+    // Use total from DTO if provided, otherwise calculate
+    let total = dto.total;
+    if (!total) {
+      total = subtotal - discount + shippingFee;
+    }
 
     return await this.prisma.$transaction(async (tx) => {
       const order = await tx.order.create({
@@ -76,6 +83,7 @@ export class OrderService {
           phone: dto.phone,
           notes: dto.notes,
           subtotal,
+          discount,
           tax,
           shippingFee,
           total,
@@ -171,7 +179,8 @@ export class OrderService {
       phone: order.phone,
       notes: order.notes,
       subtotal: order.subtotal,
-      tax: order.tax,
+      discount: order.discount || 0,
+      tax: order.tax || 0,
       shippingFee: order.shippingFee,
       total: order.total,
       createdAt: order.createdAt,

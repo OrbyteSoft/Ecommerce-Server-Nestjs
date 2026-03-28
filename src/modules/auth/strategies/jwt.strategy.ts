@@ -14,22 +14,23 @@ interface JwtPayload {
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(
     private prisma: PrismaService,
-    private configService: ConfigService,
+    configService: ConfigService,
   ) {
     const secret = configService.get<string>('JWT_SECRET');
+
     if (!secret) {
-      console.warn('JWT_SECRET is not defined in environment variables!');
+      // Hard fail at startup — missing secret is a misconfiguration, not a runtime warning
+      throw new Error('JWT_SECRET environment variable is not defined');
     }
 
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: secret || 'defaultsecret2026',
+      secretOrKey: secret,
     });
   }
 
   async validate(payload: JwtPayload) {
-    // Crucial: Select all fields needed by UserResponseDto
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
       select: {
@@ -42,9 +43,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       },
     });
 
-    if (!user) {
-      throw new UnauthorizedException('User no longer exists');
-    }
+    if (!user) throw new UnauthorizedException('User no longer exists');
 
     return user;
   }

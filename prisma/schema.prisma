@@ -205,8 +205,9 @@ model Order {
   notes         String?       @db.Text 
 
   subtotal     Float
-  tax          Float
-  shippingFee  Float       @map("shipping_fee")
+  discount     Float    @default(0)
+  tax          Float    @default(0)
+  shippingFee  Float    @map("shipping_fee")
   total        Float
 
   shippingAddrId String  @map("shipping_addr_id")

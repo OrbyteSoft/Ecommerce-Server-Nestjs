@@ -5,6 +5,8 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  IsNumber,
+  Min,
 } from 'class-validator';
 import { PaymentMethod } from '@prisma/client';
 
@@ -38,4 +40,19 @@ export class CreateOrderDto {
   @IsString()
   @IsOptional()
   transactionId?: string;
+
+  @ApiPropertyOptional({
+    example: 9550,
+    description: 'Final total with discount applied',
+  })
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  total?: number;
+
+  @ApiPropertyOptional({ example: 500, description: 'Discount amount applied' })
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  discount?: number;
 }

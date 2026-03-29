@@ -39,6 +39,7 @@ export class AuthService {
         role: dto.role,
       },
     });
+
     return this.getAuthResponse(user);
   }
 
@@ -46,53 +47,69 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
-    if (!user) throw new UnauthorizedException('Invalid credentials');
+
+    // Use a single generic message to prevent user enumeration attacks
+    if (!user) throw new UnauthorizedException('Invalid email or password');
 
     const isMatch = await bcrypt.compare(dto.password, user.password);
-    if (!isMatch) throw new UnauthorizedException('Invalid credentials');
+    if (!isMatch) throw new UnauthorizedException('Invalid email or password');
 
     return this.getAuthResponse(user);
   }
 
   async refreshTokens(userId: string, rt: string): Promise<AuthResponseDto> {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
+
+    // Both checks in one throw to avoid leaking which condition failed
     if (!user || !user.refreshToken)
       throw new ForbiddenException('Access Denied');
 
     const rtMatches = await bcrypt.compare(rt, user.refreshToken);
-    if (!rtMatches) throw new ForbiddenException('Invalid Refresh Token');
+    if (!rtMatches) throw new ForbiddenException('Access Denied');
 
     return this.getAuthResponse(user);
   }
 
-  async logout(userId: string) {
+  async logout(userId: string): Promise<void> {
+    // updateMany is safe: silently no-ops if already logged out
     await this.prisma.user.updateMany({
       where: { id: userId, refreshToken: { not: null } },
       data: { refreshToken: null },
     });
   }
 
-  private async generateTokens(userId: string, email: string, role: string) {
+  private async generateTokens(
+    userId: string,
+    email: string,
+    role: string,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
     const payload = { sub: userId, email, role };
 
-    const expiresInEnv = this.configService.get('JWT_EXPIRES_IN');
-    const expiresIn = expiresInEnv ? Number(expiresInEnv) : '1h';
+    const expiresInEnv = this.configService.get<string>('JWT_EXPIRES_IN');
+    // Fall back to '1h' if env var is missing or non-numeric
+    const expiresIn =
+      expiresInEnv && !isNaN(Number(expiresInEnv))
+        ? Number(expiresInEnv)
+        : '1h';
 
-    const [at, rt] = await Promise.all([
+    const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, {
-        secret: this.configService.get('JWT_SECRET'),
-        expiresIn: expiresIn,
+        secret: this.configService.get<string>('JWT_SECRET'),
+        expiresIn,
       }),
       this.jwtService.signAsync(payload, {
-        secret: this.configService.get('JWT_REFRESH_SECRET'),
+        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
         expiresIn: '7d',
       }),
     ]);
 
-    return { accessToken: at, refreshToken: rt };
+    return { accessToken, refreshToken };
   }
 
-  private async updateRefreshToken(userId: string, refreshToken: string) {
+  private async updateRefreshToken(
+    userId: string,
+    refreshToken: string,
+  ): Promise<void> {
     const hash = await bcrypt.hash(refreshToken, 10);
     await this.prisma.user.update({
       where: { id: userId },
@@ -104,7 +121,8 @@ export class AuthService {
     const tokens = await this.generateTokens(user.id, user.email, user.role);
     await this.updateRefreshToken(user.id, tokens.refreshToken);
     return {
-      ...tokens,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
       user: {
         id: user.id,
         email: user.email,

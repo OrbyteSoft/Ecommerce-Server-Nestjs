@@ -38,6 +38,7 @@ export class AuthController {
     return this.authService.login(loginDto);
   }
 
+  // Uses the refresh token (sent as Bearer) to issue a new token pair
   @UseGuards(RefreshTokenGuard)
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
@@ -48,11 +49,13 @@ export class AuthController {
     return this.authService.refreshTokens(userId, refreshToken);
   }
 
+  // Nullifies the stored refresh token server-side
   @UseGuards(JwtAuthGuard)
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  async logout(@GetUser('sub') userId: string) {
-    return this.authService.logout(userId);
+  async logout(@GetUser('sub') userId: string): Promise<{ message: string }> {
+    await this.authService.logout(userId);
+    return { message: 'Logged out successfully' };
   }
 
   @UseGuards(JwtAuthGuard)

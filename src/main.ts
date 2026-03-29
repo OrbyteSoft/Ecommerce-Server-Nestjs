@@ -11,11 +11,14 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       'http://localhost:3000',
+      'http://localhost:8080',
       'http://localhost:8081',
       'http://localhost:8082',
       'https://justclickeco.vercel.app',
       ...(process.env.ALLOWED_ORIGINS
         ? process.env.ALLOWED_ORIGINS.split(',')
+            .map((origin) => origin.trim())
+            .filter(Boolean)
         : []),
     ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',

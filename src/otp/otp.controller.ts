@@ -11,13 +11,13 @@ export class OtpController {
   @HttpCode(HttpStatus.OK)
   async sendOtp(@Body() dto: SendOtpDto) {
     await this.otpService.sendOtp(dto.email);
-    return { message: 'OTP sent successfully' };
+    return { message: 'OTP sent to your email successfully' };
   }
 
   @Post('verify')
   @HttpCode(HttpStatus.OK)
   async verifyOtp(@Body() dto: VerifyOtpDto) {
-    this.otpService.verifyOtp(dto.email, dto.otp);
+    this.otpService.verifyOtp(dto.otp, dto.email);
     return { message: 'OTP verified successfully' };
   }
 }

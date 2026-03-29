@@ -24,7 +24,7 @@ export class OtpService {
     await this.mailService.sendOtp(email, otp);
   }
 
-  verifyOtp(email: string, otp: string): boolean {
+  verifyOtp(otp: string, email: string): boolean {
     const record = this.otpStore.get(email);
 
     if (!record) {

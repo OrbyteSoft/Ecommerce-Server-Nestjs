@@ -1,35 +1,24 @@
 export const otpTemplate = (otp: string) => `
 <!DOCTYPE html>
 <html>
-  <body style="margin: 0; font-family: Arial, Helvetica, sans-serif; background: #f6f7fb; padding: 40px 0; color: #111827;">
-    <div style="max-width: 460px; margin: auto; background: #ffffff; border-radius: 14px; padding: 0; box-shadow: 0 6px 20px rgba(17, 24, 39, 0.08); overflow: hidden;">
-      <div style="padding: 20px 28px; background: #111827; color: #ffffff;">
-        <p style="margin: 0; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; opacity: 0.8;">JustClick</p>
-        <h1 style="margin: 8px 0 0; font-size: 22px; line-height: 1.3;">Email Verification</h1>
-      </div>
-
-      <div style="padding: 28px;">
-        <p style="margin: 0 0 10px; color: #374151; font-size: 15px; line-height: 1.6;">
-          Welcome to <strong>JustClick</strong>. Use the one-time code below to verify your account.
-        </p>
-        <p style="margin: 0 0 20px; color: #6b7280; font-size: 14px; line-height: 1.6;">
-          This code expires in <strong>10 minutes</strong>.
-        </p>
-
-        <div style="font-size: 34px; font-weight: 700; letter-spacing: 9px; padding: 18px 14px; background: #f3f4f6; text-align: center; border-radius: 10px; color: #111827; margin: 0 0 18px;">
-        ${otp}
-        </div>
-
-        <p style="margin: 0; color: #6b7280; font-size: 13px; line-height: 1.6;">
-          If you did not request this code, you can ignore this email safely.
-        </p>
-
-        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;" />
-
-        <p style="margin: 0; color: #9ca3af; font-size: 12px; line-height: 1.6;">
-          Sent by JustClick Security Team
-        </p>
-      </div>
+  <body style="font-family: Arial, Helvetica, sans-serif; background: #f9f9f9; padding: 40px 0; margin: 0;">
+    <div style="max-width: 420px; margin: auto; background: white;
+                border-radius: 12px; padding: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+      <h2 style="margin-top: 0; color: #111;">Verify your email</h2>
+      <p style="color: #555;">Use the code below to complete your verification.
+         It expires in <strong>10 minutes</strong>.</p>
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin: 24px 0;">
+        <tr>
+          <td style="background: #f4f4f4; border-radius: 8px; text-align: center; padding: 18px 12px;">
+            <span style="display: inline-block; font-family: 'Courier New', monospace; font-size: 36px; font-weight: 700; line-height: 1; letter-spacing: 8px; color: #111; unicode-bidi: bidi-override; direction: ltr;">
+              ${otp}
+            </span>
+          </td>
+        </tr>
+      </table>
+      <p style="color: #999; font-size: 13px;">
+        If you didn't request this, you can safely ignore this email.
+      </p>
     </div>
   </body>
 </html>

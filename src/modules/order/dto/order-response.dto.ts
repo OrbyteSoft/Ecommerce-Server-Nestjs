@@ -43,6 +43,9 @@ export class OrderSingleResponseDto {
   @ApiProperty({ example: 2400 })
   subtotal: number;
 
+  @ApiProperty({ example: 500, description: 'Discount applied' })
+  discount: number;
+
   @ApiProperty({ example: 0 })
   tax: number;
 
